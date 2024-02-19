@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- Generated with glade 3.40.0 -->
+<interface>
+  <requires lib="gtk+" version="3.24"/>
+  <object class="GtkWindow" id="game_result">
+    <property name="can-focus">False</property>
+    <property name="window-position">center</property>
+    <property name="gravity">static</property>
+    <child>
+      <object class="GtkLabel" id="result_text">
+        <property name="visible">True</property>
+        <property name="can-focus">False</property>
+        <property name="margin-left">70</property>
+        <property name="margin-right">70</property>
+        <property name="margin-top">50</property>
+        <property name="margin-bottom">50</property>
+        <property name="justify">center</property>
+        <property name="ellipsize">middle</property>
+      </object>
+    </child>
+  </object>
+</interface>
