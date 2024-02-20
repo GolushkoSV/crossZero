@@ -21,19 +21,26 @@ type Area struct {
 func (area *Area) init(b *gtk.Builder) {
 	for i := 0; i < 3; i++ {
 		for j := 0; j < 3; j++ {
-			objectButton, _ := b.GetObject(fmt.Sprintf("button_%d_%d", i, j))
+			buttonId := fmt.Sprintf("button_%d_%d", i, j)
+			objectButton, _ := b.GetObject(buttonId)
 			button := objectButton.(*gtk.Button)
 			if objectButton == nil {
 				log.Fatal("Ошибка: объект field равен nil")
 			}
 
-			objectField, _ := b.GetObject(fmt.Sprintf("field_%d_%d", i, j))
-			field := objectField.(*gtk.Entry)
+			// Получаем контекст style
+			context, _ := button.GetStyleContext()
+			button.SetName(buttonId)
+
+			// Устанавливаем стиль с помощью CSS
+			cssProvider, _ := gtk.CssProviderNew()
+			cssProvider.LoadFromPath("css/style.css")
+
+			context.AddProvider(cssProvider, gtk.STYLE_PROVIDER_PRIORITY_APPLICATION)
 
 			area.Field[i][j] = Field{
 				area:      area,
 				button:    button,
-				field:     field,
 				xPosition: i,
 				yPosition: j,
 			}
@@ -46,7 +53,6 @@ func (area *Area) init(b *gtk.Builder) {
 type Field struct {
 	area      *Area
 	button    *gtk.Button
-	field     *gtk.Entry
 	value     string
 	xPosition int
 	yPosition int
@@ -60,7 +66,7 @@ func (f *Field) handleMove(b *gtk.Builder) {
 			f.area.LastPoint = PointO
 		}
 
-		f.field.SetText(f.area.LastPoint)
+		f.button.SetLabel(f.area.LastPoint)
 		f.value = f.area.LastPoint
 
 		isWin := false
@@ -216,7 +222,7 @@ func main() {
 		log.Fatal("Ошибка:", err)
 	}
 
-	err = b.AddFromFile("glades/base_game_field.glade")
+	err = b.AddFromFile("glades/new_game_filed.glade")
 	if err != nil {
 		log.Fatal("Ошибка:", err)
 	}
@@ -225,6 +231,11 @@ func main() {
 	if err != nil {
 		log.Fatal("Ошибка:", err)
 	}
+
+	objImg, _ := b.GetObject("main_img")
+	image, _ := objImg.(*gtk.Image)
+
+	image.SetFromFile("pictures/main_img.png")
 
 	// Получаем объект главного окна по ID
 	obj, err := b.GetObject("main_window")

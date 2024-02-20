@@ -3,7 +3,10 @@
 <interface>
   <requires lib="gtk+" version="3.24"/>
   <object class="GtkWindow" id="game_field">
+    <property name="width-request">400</property>
+    <property name="height-request">400</property>
     <property name="can-focus">False</property>
+    <property name="window-position">center</property>
     <child>
       <!-- n-columns=3 n-rows=3 -->
       <object class="GtkGrid">
@@ -12,9 +15,14 @@
         <property name="row-homogeneous">True</property>
         <property name="column-homogeneous">True</property>
         <child>
-          <object class="GtkEntry" id="field_1_1">
+          <object class="GtkButton" id="button_0_0">
+            <property name="label" translatable="yes"> </property>
             <property name="visible">True</property>
             <property name="can-focus">True</property>
+            <property name="receives-default">True</property>
+            <style>
+              <class name="font-size: 50px;"/>
+            </style>
           </object>
           <packing>
             <property name="left-attach">0</property>
@@ -22,29 +30,11 @@
           </packing>
         </child>
         <child>
-          <object class="GtkEntry" id="field_2_1">
+          <object class="GtkButton" id="button_1_1">
+            <property name="label" translatable="yes"> </property>
             <property name="visible">True</property>
             <property name="can-focus">True</property>
-          </object>
-          <packing>
-            <property name="left-attach">1</property>
-            <property name="top-attach">0</property>
-          </packing>
-        </child>
-        <child>
-          <object class="GtkEntry" id="field_3_1">
-            <property name="visible">True</property>
-            <property name="can-focus">True</property>
-          </object>
-          <packing>
-            <property name="left-attach">2</property>
-            <property name="top-attach">0</property>
-          </packing>
-        </child>
-        <child>
-          <object class="GtkEntry" id="field_2_2">
-            <property name="visible">True</property>
-            <property name="can-focus">True</property>
+            <property name="receives-default">True</property>
           </object>
           <packing>
             <property name="left-attach">1</property>
@@ -52,9 +42,11 @@
           </packing>
         </child>
         <child>
-          <object class="GtkEntry" id="field_3_3">
+          <object class="GtkButton" id="button_2_2">
+            <property name="label" translatable="yes"> </property>
             <property name="visible">True</property>
             <property name="can-focus">True</property>
+            <property name="receives-default">True</property>
           </object>
           <packing>
             <property name="left-attach">2</property>
@@ -62,29 +54,11 @@
           </packing>
         </child>
         <child>
-          <object class="GtkEntry" id="field_3_2">
+          <object class="GtkButton" id="button_2_0">
+            <property name="label" translatable="yes"> </property>
             <property name="visible">True</property>
             <property name="can-focus">True</property>
-          </object>
-          <packing>
-            <property name="left-attach">2</property>
-            <property name="top-attach">1</property>
-          </packing>
-        </child>
-        <child>
-          <object class="GtkEntry" id="field_2_3">
-            <property name="visible">True</property>
-            <property name="can-focus">True</property>
-          </object>
-          <packing>
-            <property name="left-attach">1</property>
-            <property name="top-attach">2</property>
-          </packing>
-        </child>
-        <child>
-          <object class="GtkEntry" id="field_1_3">
-            <property name="visible">True</property>
-            <property name="can-focus">True</property>
+            <property name="receives-default">True</property>
           </object>
           <packing>
             <property name="left-attach">0</property>
@@ -92,9 +66,59 @@
           </packing>
         </child>
         <child>
-          <object class="GtkEntry" id="field_1_2">
+          <object class="GtkButton" id="button_0_2">
+            <property name="label" translatable="yes"> </property>
             <property name="visible">True</property>
             <property name="can-focus">True</property>
+            <property name="receives-default">True</property>
+          </object>
+          <packing>
+            <property name="left-attach">2</property>
+            <property name="top-attach">0</property>
+          </packing>
+        </child>
+        <child>
+          <object class="GtkButton" id="button_2_1">
+            <property name="label" translatable="yes"> </property>
+            <property name="visible">True</property>
+            <property name="can-focus">True</property>
+            <property name="receives-default">True</property>
+          </object>
+          <packing>
+            <property name="left-attach">1</property>
+            <property name="top-attach">2</property>
+          </packing>
+        </child>
+        <child>
+          <object class="GtkButton" id="button_1_2">
+            <property name="label" translatable="yes"> </property>
+            <property name="visible">True</property>
+            <property name="can-focus">True</property>
+            <property name="receives-default">True</property>
+          </object>
+          <packing>
+            <property name="left-attach">2</property>
+            <property name="top-attach">1</property>
+          </packing>
+        </child>
+        <child>
+          <object class="GtkButton" id="button_0_1">
+            <property name="label" translatable="yes"> </property>
+            <property name="visible">True</property>
+            <property name="can-focus">True</property>
+            <property name="receives-default">True</property>
+          </object>
+          <packing>
+            <property name="left-attach">1</property>
+            <property name="top-attach">0</property>
+          </packing>
+        </child>
+        <child>
+          <object class="GtkButton" id="button_1_0">
+            <property name="label" translatable="yes"> </property>
+            <property name="visible">True</property>
+            <property name="can-focus">True</property>
+            <property name="receives-default">True</property>
           </object>
           <packing>
             <property name="left-attach">0</property>
