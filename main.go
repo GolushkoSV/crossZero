@@ -264,7 +264,7 @@ func main() {
 		}
 
 		gameWin := objGame.(*gtk.Window)
-		gameWin.SetTitle("Game")
+		gameWin.SetTitle("CrossZeroClient")
 		if err != nil {
 			log.Fatal("Ошибка:", err)
 		}
