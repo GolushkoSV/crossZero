@@ -335,7 +335,7 @@ func main() {
 			urlConnectToNetworkGame := objectUrlConnectToNetworkGame.(*gtk.Entry)
 
 			//todo Нужен запрос к server на получение urlPath для получения урла сокет соединения
-			requestURL := fmt.Sprintf("https://89.223.67.176:8085/new-network-game")
+			requestURL := fmt.Sprintf("http://77.222.55.180:8085/new-network-game")
 			response, err := http.Get(requestURL)
 			if err != nil {
 				fmt.Printf("error making http request: %s\n", err)
@@ -361,7 +361,7 @@ func main() {
 		gameIdField := objGameIdField.(*gtk.Entry)
 		idGameStr, _ := gameIdField.GetText()
 
-		u := url.URL{Scheme: "ws", Host: "89.223.67.176:8085", Path: "/connect-network-game"}
+		u := url.URL{Scheme: "ws", Host: "77.222.55.180:8085", Path: "/connect-network-game"}
 		log.Printf("Connecting to %s", u.String())
 
 		connect, _, err := websocket.DefaultDialer.Dial(u.String(), nil)
