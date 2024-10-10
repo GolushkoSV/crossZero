@@ -1,15 +1,27 @@
 package main
 
 import (
+	"encoding/json"
 	"fmt"
-	"log"
-
+	"github.com/gorilla/websocket"
+	"github.com/gotk3/gotk3/glib"
 	"github.com/gotk3/gotk3/gtk"
+	"io/ioutil"
+	"log"
+	"net/http"
+	"net/url"
+	"strconv"
 )
 
 const (
 	PointX = "X"
 	PointO = "0"
+)
+
+const (
+	CODE_NEW_GAME        = 5
+	CODE_CONNECT_TO_GANE = 10
+	CODE_MOVE_IN_GAME    = 15
 )
 
 type Area struct {
@@ -48,6 +60,9 @@ func (area *Area) init(b *gtk.Builder) {
 			area.LastPoint = PointO
 		}
 	}
+}
+func (area *Area) findFieldByCoordinate(xPosition int, yPosition int) *Field {
+	return &area.Field[xPosition][yPosition]
 }
 
 type Field struct {
@@ -92,6 +107,21 @@ func (f *Field) handleMove(b *gtk.Builder) {
 
 			resGame.ShowAll()
 		}
+	})
+}
+
+func (f *Field) handleNetworkMove(wsConnect *websocket.Conn, gameId int, point string) {
+	f.button.Connect("clicked", func() {
+		// Отправляем запрос на сервер, свой ход
+		move := RequestMoveInGame{
+			GameId:    gameId,
+			PointMove: point,
+			PositionX: f.xPosition,
+			PositionY: f.yPosition,
+		}
+
+		serverData, _ := json.Marshal(ServerData{Code: CODE_MOVE_IN_GAME, Content: move})
+		wsConnect.WriteMessage(websocket.TextMessage, serverData)
 	})
 }
 
@@ -216,7 +246,7 @@ func main() {
 		log.Fatal("Ошибка:", err)
 	}
 
-	// Загружаем в билдер окно из файла Glade
+	// Загружаем в билдер окна из файла Glade
 	err = b.AddFromFile("glades/MainMenuGame.glade")
 	if err != nil {
 		log.Fatal("Ошибка:", err)
@@ -228,6 +258,11 @@ func main() {
 	}
 
 	err = b.AddFromFile("glades/game_result_window.glade")
+	if err != nil {
+		log.Fatal("Ошибка:", err)
+	}
+
+	err = b.AddFromFile("glades/network_game_window.glade")
 	if err != nil {
 		log.Fatal("Ошибка:", err)
 	}
@@ -256,7 +291,7 @@ func main() {
 	objButtonGame, _ := b.GetObject("button_game")
 	buttonGame := objButtonGame.(*gtk.Button)
 
-	// Сигнал по нажатию на кнопку
+	//Обрабатываем событие клика "Играть"
 	buttonGame.Connect("clicked", func() {
 		objGame, err := b.GetObject("game_field")
 		if err != nil {
@@ -278,6 +313,138 @@ func main() {
 		gameWin.ShowAll()
 	})
 
+	// Обрабатываем событие клика "Сетевая игра"
+	objButtonNetworkGame, _ := b.GetObject("button_network_game")
+	buttonNetworkGame := objButtonNetworkGame.(*gtk.Button)
+	buttonNetworkGame.Connect("clicked", func() {
+		objNetworkGame, err := b.GetObject("network_game")
+		if err != nil {
+			log.Fatal("Ошибка:", err)
+		}
+
+		networkGame := objNetworkGame.(*gtk.Window)
+		networkGame.SetTitle("CrossZeroClient")
+		if err != nil {
+			log.Fatal("Ошибка:", err)
+		}
+
+		objButtonNewNetworkGame, _ := b.GetObject("new_network_game")
+		buttonNewNetworkGame := objButtonNewNetworkGame.(*gtk.Button)
+		buttonNewNetworkGame.Connect("clicked", func() {
+			objectUrlConnectToNetworkGame, _ := b.GetObject("url_connect_to_network_game")
+			urlConnectToNetworkGame := objectUrlConnectToNetworkGame.(*gtk.Entry)
+
+			//todo Нужен запрос к server на получение urlPath для получения урла сокет соединения
+			requestURL := fmt.Sprintf("https://89.223.67.176:8085/new-network-game")
+			response, err := http.Get(requestURL)
+			if err != nil {
+				fmt.Printf("error making http request: %s\n", err)
+			}
+
+			resBody, err := ioutil.ReadAll(response.Body)
+			if err != nil {
+				fmt.Printf("client: could not read response body: %s\n", err)
+			}
+
+			fmt.Println(resBody)
+			urlConnectToNetworkGame.SetText(string(resBody))
+		})
+
+		networkGame.ShowAll()
+	})
+
+	// Обрабатываем событие подключения к Сетевой игре
+	objButtonConnectNetworkGame, _ := b.GetObject("button_connect_network_game")
+	buttonConnectNetworkGame := objButtonConnectNetworkGame.(*gtk.Button)
+	buttonConnectNetworkGame.Connect("clicked", func() {
+		objGameIdField, _ := b.GetObject("entry_game_id")
+		gameIdField := objGameIdField.(*gtk.Entry)
+		idGameStr, _ := gameIdField.GetText()
+
+		u := url.URL{Scheme: "ws", Host: "89.223.67.176:8085", Path: "/connect-network-game"}
+		log.Printf("Connecting to %s", u.String())
+
+		connect, _, err := websocket.DefaultDialer.Dial(u.String(), nil)
+		if err != nil {
+			log.Fatal("dial:", err)
+		}
+
+		idGame, err := strconv.Atoi(idGameStr)
+		if err != nil {
+			fmt.Println("Error converting string to int:", err)
+			return
+		}
+
+		connectToGame := ConnectToGame{
+			GameId: idGame,
+		}
+
+		serverData, _ := json.Marshal(ServerData{Code: CODE_CONNECT_TO_GANE, Content: connectToGame})
+		connect.WriteMessage(websocket.TextMessage, serverData)
+
+		go func() {
+			for {
+				_, message, err := connect.ReadMessage()
+				var serverResponse ServerData
+
+				err = serverResponse.UnmarshalJSON(message)
+				if err != nil {
+					fmt.Println(err)
+				}
+
+				switch c := serverResponse.Content.(type) {
+				case ConnectToGame:
+					glib.IdleAdd(func() bool {
+						objGame, err := b.GetObject("game_field")
+						if err != nil {
+							log.Fatal("Ошибка:", err)
+						}
+
+						gameWin := objGame.(*gtk.Window)
+						gameWin.SetTitle("CrossZeroClient")
+
+						for i := 0; i < len(area.Field); i++ {
+							for j := 0; j < len(area.Field[i]); j++ {
+								area.Field[i][j].handleNetworkMove(connect, c.GameId, c.PointMove)
+							}
+						}
+
+						gameWin.ShowAll()
+
+						return false
+					})
+				case ResponseMoveInGame:
+					glib.IdleAdd(func() bool {
+						fmt.Println("Регистрация хода")
+						fieldInMove := area.findFieldByCoordinate(c.PositionX, c.PositionY)
+						fieldInMove.button.SetLabel(c.PointMove)
+						fieldInMove.value = c.PointMove
+						if c.IsWin {
+							objResGame, err := b.GetObject("game_result")
+							if err != nil {
+								log.Fatal("Ошибка:", err)
+							}
+
+							resGame := objResGame.(*gtk.Window)
+							resGame.SetTitle("Результат игры")
+							objectFieldResult, _ := b.GetObject("result_text")
+							fieldResult := objectFieldResult.(*gtk.Label)
+							fieldResult.SetText(fmt.Sprintf("Выиграл %s", c.PointMove))
+
+							resGame.ShowAll()
+						} else {
+							fmt.Println(c)
+						}
+
+						return false
+					})
+				default:
+					fmt.Println("Неизвестный тип содержимого")
+				}
+			}
+		}()
+	})
+
 	objButtonGoOut, _ := b.GetObject("button_go_out")
 	buttonGoOut := objButtonGoOut.(*gtk.Button)
 
@@ -290,4 +457,59 @@ func main() {
 	win.ShowAll()
 
 	gtk.Main()
+}
+
+type ServerData struct {
+	Code    int
+	Content ResponseContent
+}
+
+type ResponseContent interface{}
+
+func (sr *ServerData) UnmarshalJSON(data []byte) error {
+	var raw map[string]json.RawMessage
+	if err := json.Unmarshal(data, &raw); err != nil {
+		return err
+	}
+
+	if err := json.Unmarshal(raw["Code"], &sr.Code); err != nil {
+		return err
+	}
+
+	switch sr.Code {
+	case CODE_CONNECT_TO_GANE:
+		var content ConnectToGame
+		if err := json.Unmarshal(raw["Content"], &content); err != nil {
+			return err
+		}
+		sr.Content = content
+	case CODE_MOVE_IN_GAME:
+		var content ResponseMoveInGame
+		if err := json.Unmarshal(raw["Content"], &content); err != nil {
+			return err
+		}
+		sr.Content = content
+	}
+
+	return nil
+}
+
+type ConnectToGame struct {
+	GameId    int
+	PointMove string
+}
+
+type RequestMoveInGame struct {
+	GameId    int
+	PointMove string
+	PositionX int
+	PositionY int
+}
+
+type ResponseMoveInGame struct {
+	GameId    int
+	PointMove string
+	PositionX int
+	PositionY int
+	IsWin     bool
 }
